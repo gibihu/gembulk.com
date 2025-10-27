@@ -22,7 +22,7 @@ class LoginController extends Controller
 
             if (Auth::attempt($credentials, $request->boolean('remember'))) {
                 $request->session()->regenerate();
-                return redirect()->intended(route('dash.index', absolute: true))->with('reload', true);
+                return redirect()->intended(route('home', absolute: true))->with('reload', true);
             }
 
             throw ValidationException::withMessages([
