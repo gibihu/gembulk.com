@@ -22,11 +22,11 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.STAGING_SERVER_IP }} << 'EOF_SERVER_OPS'
 
-            if [ ! -d "app" ]; then
-              git clone git@github.com:gibihu/gembulk.com.git app
+            if [ ! -d "system" ]; then
+              git clone git@github.com:gibihu/gembulk.com.git system
             fi
 
-            cd app
+            cd system
 
             git fetch origin main
             git reset --hard HEAD
@@ -47,13 +47,13 @@ jobs:
             echo 'Permissions set completed on server.'
 
             php artisan storage:link
-            echo 'Laravel storage:link executed on app/public.'
+            echo 'Laravel storage:link executed on system/public.'
 
             rsync -avz --delete \
               --exclude 'index.php' \
-              /app/public/ \
+              /system/public/ \
               /httpdocs/
-            echo 'Public folder synced from app to httpdocs.'
+            echo 'Public folder synced from system to httpdocs.'
             cat > /httpdocs/index.php << 'END'
           <?php
 
@@ -62,13 +62,13 @@ jobs:
 
           define('LARAVEL_START', microtime(true));
 
-          if (file_exists($maintenance = __DIR__.'/../app/storage/framework/maintenance.php')) {
+          if (file_exists($maintenance = __DIR__.'/../system/storage/framework/maintenance.php')) {
               require $maintenance;
           }
 
-          require __DIR__.'/../app/vendor/autoload.php';
+          require __DIR__.'/../system/vendor/autoload.php';
 
-          $app = require_once __DIR__.'/../app/bootstrap/app.php';
+          $app = require_once __DIR__.'/../system/bootstrap/system.php';
 
           $app->handleRequest(Request::capture());
           END
