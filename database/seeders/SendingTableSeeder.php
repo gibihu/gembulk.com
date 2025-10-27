@@ -87,11 +87,11 @@ class SendingTableSeeder extends Seeder
         ]);
 
         User::firstOrCreate(
-            ['email' => 'a@a.com'],
+            ['email' => 'a@gmail.com'],
             [
                 'name' => 'Test User',
                 'username' => 'test',
-                'password' => 'asdasdasdasd',
+                'password' => '123456789',
                 'roles' => [$role1->id, $role2->id],
                 'plan_id' => $plan->id,
                 'email_verified_at' => now(),
