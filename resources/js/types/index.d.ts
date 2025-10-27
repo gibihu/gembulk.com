@@ -1,8 +1,9 @@
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
+import { UserType } from './user';
 
 export interface Auth {
-    user: User;
+    user: UserType;
 }
 
 export interface BreadcrumbItem {

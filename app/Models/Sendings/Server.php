@@ -4,6 +4,7 @@ namespace App\Models\Sendings;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Server extends Model
 {
@@ -27,8 +28,21 @@ class Server extends Model
 
     protected $casts = [
         'settings' => 'json',
-        'headers' => 'json',
         'body' => 'json',
         'callbacks' => 'json',
     ];
+
+    protected $with = [
+        'senders',
+    ];
+
+    protected $hidden = [
+        'server_id',
+    ];
+
+
+    public function senders(): HasMany
+    {
+        return $this->hasMany(Sender::class, 'server_id');
+    }
 }

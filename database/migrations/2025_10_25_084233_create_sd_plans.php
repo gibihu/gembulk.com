@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sd_plans', function (Blueprint $table) {
-            $table->char('id', 36)->primary();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('description')->nullable();
             $table->text('details')->nullable();
@@ -26,6 +26,8 @@ return new class extends Migration
 
             $table->integer('duration')->default(0);
             $table->integer('duration_unit')->default(1); // 1 = 1 วิ
+
+            $table->json('servers')->nullable();
 
             $table->tinyInteger('status')->default(0);
             $table->integer('public')->default(0);

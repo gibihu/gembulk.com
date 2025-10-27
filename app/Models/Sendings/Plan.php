@@ -24,9 +24,24 @@ class Plan extends Model
         'custom_plans',
         'duration',
         'duration_unit',
+        'servers',
     ];
 
     protected $casts = [
         'options' => 'json',
+        'servers' => 'json',
+        'custom_plans' => 'json',
     ];
+
+//    แปลงเป็นข้อความ
+    public function getServersAttribute($value)
+    {
+        $ids = json_decode($value, true) ?? [];
+        return Server::whereIn('id', $ids)->get();
+    }
+//    แปลงกลับตอนบันทึก
+    public function setServersAttribute($value)
+    {
+        $this->attributes['servers'] = json_encode($value);
+    }
 }

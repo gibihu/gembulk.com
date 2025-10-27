@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sd_report', function (Blueprint $table) {
-            $table->char('id', 36)->primary();
-            $table->string('phone', 20)->nullable();
+        Schema::create('sd_reports', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('receiver', 20)->nullable();
             $table->text('msg')->nullable();
-            $table->string('response')->nullable();
+            $table->json('response')->nullable();
             $table->integer('send_status')->default(0);
             $table->integer('cost')->default(0);
 
@@ -42,6 +42,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sd_report');
+        Schema::dropIfExists('sd_reports');
     }
 };

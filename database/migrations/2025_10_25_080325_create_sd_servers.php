@@ -12,14 +12,14 @@ return new class extends Migration {
     {
 
         Schema::create('sd_servers', function (Blueprint $table) {
-            $table->char('id', 36)->primary();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('static_name');
             $table->string('host')->nullable();
             $table->string('url');
             $table->string('method')->default('GET');
             $table->json('settings')->nullable();
-            $table->json('headers')->nullable();
+            $table->longText('headers')->nullable();
             $table->json('body')->nullable();
             $table->json('callbacks')->nullable();
             $table->bigInteger('credits')->default(0);

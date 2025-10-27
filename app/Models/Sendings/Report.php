@@ -4,16 +4,19 @@ namespace App\Models\Sendings;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use App\Trait\GlobalStatusTrait;
+use App\Models\Users\User;
 
 class Report extends Model
 {
+    use GlobalStatusTrait;
     use HasUuids;
     protected $table = 'sd_reports';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
-        'phone',
+        'receiver',
         'msg',
         'response',
         'send_status',
@@ -23,4 +26,33 @@ class Report extends Model
         'server_id',
         'status',
     ];
+    protected $hidden = [
+        'server_id',
+        'sender_id',
+    ];
+    protected $casts = [
+        'is_scheduled' => 'boolean',
+        'response' => 'json',
+    ];
+    protected $appends = [
+        'status_text',
+    ];
+    protected $with = [
+        'server',
+        'sender',
+        'user',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+    public function server()
+    {
+        return $this->belongsTo(Server::class, 'server_id', 'id');
+    }
+    public function sender()
+    {
+        return $this->belongsTo(Sender::class, 'sender_id', 'id');
+    }
 }

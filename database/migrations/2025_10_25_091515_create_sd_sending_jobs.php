@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sd_sending_jobs', function (Blueprint $table) {
-            $table->char('id', 36)->primary();
-            $table->string('phone', 20)->nullable();
+            $table->uuid('id')->primary();
+            $table->string('receiver', 20)->nullable();
             $table->text('msg')->nullable();
             $table->string('response')->nullable();
             $table->integer('send_status')->default(0);

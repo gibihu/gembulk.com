@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sd_senders', function (Blueprint $table) {
-            $table->char('id', 36)->primary();
+            $table->uuid('id')->primary();
             $table->string('name');
-            $table->char('server_id', 36);
+            $table->char('server_id', 36); // เพิ้อระบุเซิฟได้ชัดเจร
 
             $table->tinyInteger('status')->default(0);
 
