@@ -11,7 +11,7 @@ import SendingTable from "../table";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'ทำงาน',
+        title: 'กำหนดการส่ง',
         href: dash.jobs.sms().url,
     },
 ];

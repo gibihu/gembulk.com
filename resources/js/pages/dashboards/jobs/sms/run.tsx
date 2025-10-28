@@ -6,7 +6,7 @@ import api from "@/routes/api";
 import dash from "@/routes/dash";
 import { BreadcrumbItem } from "@/types";
 import { ReportType } from "@/types/user";
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { Check, Clock, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -19,17 +19,28 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function SmsRunJobPage(request: any) {
-    const [items, setItems] = useState<ReportType[]>(request.jobs as ReportType[]);
+    const [rawItems, setRawItems] = useState<ReportType[]>([]);
+    const [items, setItems] = useState<ReportType[]>([]);
     const [isFetch, setIsFetch] = useState<boolean>(false);
+    const [isLoad, setIsLoad] = useState<boolean>(true);
+
 
     useEffect(() => {
-        console.log(request);
-    }, []);
+        setRawItems(request.jobs as ReportType[]);
+        setIsLoad(false);
+    }, [request.jobs]);
+
+
+    useEffect(() => {
+        setItems([...rawItems].sort((a, b) => b.status - a.status));
+    }, [rawItems]);
+
 
     useEffect(() => {
         const interval = setInterval(() => {
             handleSyncJob();
-        }, 3000);
+            // router.reload();
+        }, 1000);
         return () => clearInterval(interval);
     }, []);
 
@@ -42,7 +53,7 @@ export default function SmsRunJobPage(request: any) {
             if (result.code === 200) {
                 const newData: ReportType[] = result.data;
 
-                setItems((prevItems) => {
+                setRawItems((prevItems) => {
                     const currentIds = prevItems.map((item) => item.id);
                     const newIds = newData.map((item) => item.id);
 
@@ -62,7 +73,7 @@ export default function SmsRunJobPage(request: any) {
 
                         // ตั้งเวลาให้ลบออกภายใน 3 วิ
                         setTimeout(() => {
-                            setItems((current) => current.filter((x) => x.id !== removed.id));
+                            setRawItems((current) => current.filter((x) => x.id !== removed.id));
                         }, 3000);
                     });
 
@@ -89,8 +100,8 @@ export default function SmsRunJobPage(request: any) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                {items.map((item: ReportType, key: number) => (
-                    <Item variant="outline" key={key} className={cn("shadow-md", item.status_text == "processing" && "bg-primary/30", item.status_text == "success" && "bg-green-600/30" )}>
+                {items.length > 0 ? (items.map((item: ReportType, key: number) => (
+                    <Item variant="outline" key={key} className={cn("shadow-md", item.status_text == "processing" && "bg-primary/30", item.status_text == "success" && "bg-green-600/30")}>
                         <ItemContent>
                             <ItemTitle>+{item.receiver}</ItemTitle>
                             <ItemDescription>
@@ -98,16 +109,28 @@ export default function SmsRunJobPage(request: any) {
                             </ItemDescription>
                         </ItemContent>
                         <ItemActions className="flex items-center justify-center">
+                            {item.scheduled_at && (
+                                <span>{item.scheduled_at}</span>
+                            )}
+
                             {item.status_text == "processing" ? (
                                 <LoaderCircle className="size-5 animate-spin" />
-                            ) : ( item.status_text == 'success' ? (
+                            ) : (item.status_text == 'success' ? (
                                 <Check className="size-5 animate-rotate-y animate-once animate-ease-in-out" />
-                            ):
+                            ) :
                                 <Clock className="size-5" />
                             )}
                         </ItemActions>
                     </Item>
-                ))}
+                ))) : (
+                    <div className="w-full flex justify-center text-muted-foreground">
+                        {isLoad ? (
+                            <LoaderCircle className="size-4 animate-spin" />
+                        ): (
+                            <>ไม่มีรายการที่กำลังทำ</>
+                        )}
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

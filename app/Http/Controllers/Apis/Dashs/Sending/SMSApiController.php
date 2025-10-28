@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sendings\SendingJob;
 use Exception;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class SMSApiController extends Controller
 {
@@ -22,7 +23,7 @@ class SMSApiController extends Controller
 
             $user = $request->user();
             if($user->credit >= $cost){
-                $user->credit = $user->credit - $cost;
+                $user->credit = $user->credit - ($cost * $phone_counts);
                 $user->save();
 
                 $success = [];
@@ -36,6 +37,8 @@ class SMSApiController extends Controller
                         'sender_id' => $sender,
                         'server_id' => $sever,
                         'status' => SendingJob::STATUS_PENDING,
+                        'is_scheduled' => $request->is_scheduled ?? false,
+                        'scheduled_at' => $request->scheduled_at ? Carbon::parse($request->scheduled_at) : Carbon::now(),
                     ]);
                     if($job){
                         $success[] = $job->id;
@@ -88,12 +91,15 @@ class SMSApiController extends Controller
     public function syncJob(Request $request)
     {
         try{
-            $jobs = SendingJob::where('user_id', $request->user()->id)->get();
+            $jobs = SendingJob::without(['user', 'server'])->where('user_id', $request->user()->id)->orderBy('scheduled_at', 'ASC')->orderBy('created_at', 'ASC')->limit(1000)->get();
             return response()->json([
                 'message' => 'สำเร็จ',
                 'code' => 200,
                 'data' => $jobs,
                 'description' => '',
+                // 'debug' => [
+                //     'isset' => isset(json_decode($jobs, true)[0]['scheduled_at'])
+                // ]
             ], 200);
         }catch (Exception $e) {
             $response = [

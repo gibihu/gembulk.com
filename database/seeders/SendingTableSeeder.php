@@ -46,9 +46,9 @@ class SendingTableSeeder extends Seeder
                 ['msisdn', '{receiver}'],
             ],
             'callbacks' => [
-                ['success', [true, false], true], // key value success
+                ['success', '{success}'], // key value success
                 ['message', '{msg}'],
-                ['data', '{json}']
+                ['data', '{data}']
             ],
         ]);
 
@@ -86,7 +86,7 @@ class SendingTableSeeder extends Seeder
             'credits' => 1500,
         ]);
 
-        User::firstOrCreate(
+        $user = User::firstOrCreate(
             ['email' => 'a@gmail.com'],
             [
                 'name' => 'Test User',
@@ -98,6 +98,10 @@ class SendingTableSeeder extends Seeder
                 'credit' => 1000000,
             ]
         );
+
+        $server->user_id = $user->id;
+
+
         $words = [
             "พนัน", "หวย", "เดิมพัน", "บาคาร่า", "สล็อต", "ยิงปลา", "มวย", "แทง", "ยิง", "นายก",
             "รัฐบาล", "หนังโป๊", "xxx", "เย็ด", "รูปโป๊", "คลิปโป๊", "แทงบอลออนไลน์",
