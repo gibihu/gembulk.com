@@ -12,7 +12,7 @@ Route::controller(LoginController::class)->prefix('login')->name('login.')->grou
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::controller(WebPageController::class)->group(function () {
+    Route::controller(WebDashPageController::class)->group(function () {
         Route::get('/', 'index')->name('home');
     });
 

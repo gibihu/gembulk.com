@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('sd_spam_words', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('word');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('sd_spam_words')) {
+            Schema::create('sd_spam_words', function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->string('word');
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

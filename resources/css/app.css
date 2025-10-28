@@ -145,11 +145,9 @@
 @layer components {
   [data-sonner-toaster][data-sonner-theme="dark"] [data-description] {
     @apply !text-accent-foreground;
-    @apply !bg-destructive;
   }
 
   [data-sonner-toaster][data-sonner-theme="light"] [data-description] {
     @apply !text-accent-foreground;
-    @apply !bg-destructive;
   }
 }

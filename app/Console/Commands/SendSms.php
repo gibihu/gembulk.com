@@ -2,12 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Helpers\ServerHelper;
 use App\Http\Controllers\Sendings\SMSSendingController;
+use App\Models\Sendings\Report;
 use App\Models\Sendings\SendingJob;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
-use App\Helpers\ServerHelper;
-use App\Models\Sendings\Report;
 
 class SendSms extends Command
 {
@@ -30,10 +31,23 @@ class SendSms extends Command
      */
     public function handle()
     {
-        $jobs = SendingJob::limit(500)->get();
+        $jobs = SendingJob::limit(500)->orderBy('scheduled_at', 'ASC')->orderBy('created_at', 'ASC')->get();
 
         foreach ($jobs as $job) {
             try {
+                if ($job->is_scheduled) {
+                    if (isset($job->scheduled_at)) {
+                        $do = Carbon::parse($job->scheduled_at);
+
+                        // ถ้าเวลาที่ตั้งไว้ยังไม่ถึงตอนนี้ ให้ข้ามไปก่อน
+                        if ($do->greaterThan(Carbon::now())) {
+                            continue;
+                        }
+                    } else {
+                        // ไม่มีเวลา scheduled_at ก็ข้ามไปเลย
+                        continue;
+                    }
+                }
                 $job->status = SendingJob::STATUS_PROCESSING;
                 $job->save();
                 $server = $job->server;
@@ -67,7 +81,19 @@ class SendSms extends Command
 
                     if (array_key_exists($key, $response)) {
                         $value = $response[$key];
-                        $processed[$key] = $value;
+                        if($mapping == '{success}'){
+                            $processed['success'] = $value;
+                        }else if($mapping == '{msg}'){
+                            $processed['message'] = $value;
+                        }else if($mapping == '{data}'){
+                            $processed['data'] = $value;
+                        }else if($mapping == '{status}'){
+                            $processed['status'] = $value;
+                        }else if($mapping == '{code}'){
+                            $processed['code'] = $value;
+                        }else{
+                            $processed[$key] = $value;
+                        }
                     }
                 }
 
@@ -86,7 +112,9 @@ class SendSms extends Command
                     'user_id' => $user->id,
                     'sender_id' => $sender->id,
                     'server_id' => $server->id,
-                    'status' => Report::STATUS_ACTIVE,
+                    'status' => Report::STATUS_SUCCESS,
+                    'is_scheduled' => $job->is_scheduled ?? false,
+                    'scheduled_at' => $job->scheduled_at ? Carbon::parse($job->scheduled_at) : Carbon::now(),
                 ]);
 
             } catch (Exception $e) {
@@ -97,12 +125,14 @@ class SendSms extends Command
                     'response' => [
                         'message' => $e->getMessage(),
                     ],
-                    'send_status' => Report::STATUS_ERROR,
+                    'send_status' => Report::STATUS_FAILED,
                     'cost' => $job->cost,
                     'user_id' => $user->id,
                     'sender_id' => $job->server->id,
                     'server_id' => $job->sender->id,
-                    'status' => Report::STATUS_FAILED,
+                    'status' => Report::STATUS_ERROR,
+                    'is_scheduled' => $job->is_scheduled ?? false,
+                    'scheduled_at' => $job->scheduled_at ? Carbon::parse($job->scheduled_at) : Carbon::now(),
                 ]);
                 $user->credit = $job->user->credit + $job->cost;
                 $user->save();

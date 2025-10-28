@@ -1,18 +1,27 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/layouts/app-layout";
 import { normalizePhones } from "@/lib/phone-filter";
 import { useDetectSpamWord } from "@/lib/spam-word";
+import { toTimestamp } from "@/lib/timestamp";
 import api from "@/routes/api";
 import dash from "@/routes/dash";
 import { BreadcrumbItem } from "@/types";
 import { PlanType, SenderType, ServerType, UserType } from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Head, router } from "@inertiajs/react";
+import { addYears } from "date-fns";
+import { ChevronDownIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -30,7 +39,6 @@ export default function SmsAddPage(request: any) {
     const [plan, setPlan] = useState<PlanType>(request.auth.user.plan ?? {} as PlanType);
     const [servers, setServers] = useState<ServerType[]>(request.auth.user.plan.servers ?? {} as ServerType[]);
     const [isFetch, setIsFetch] = useState<boolean>(false);
-    const [selectedSender, setSelectedSender] = useState<string>("");
     const [countReceivers, setCountReceivers] = useState<number>(0);
     const [phoneAfterFilter, setPhoneAfterFilter] = useState<string[]>([]);
     const [hasBadWord, setHasBadWord] = useState<boolean>(false);
@@ -39,12 +47,17 @@ export default function SmsAddPage(request: any) {
     useEffect(() => {
         console.log(request);
     }, []);
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 5); // บวก 5 นาที
 
     const schema = z.object({
         sender: z.string().min(1, { message: "ห้ามว่าง" }),
         receivers: z.string().min(1, { message: "ห้ามว่าง" }),
-        msg: z.string().min(1, { message: "ต้องมีข้อความอย่างน้อย 1 ตัวอักษร" }),
+        msg: z.string({ message: "กรุณากรอกข้อความ" }).min(0, { message: "ต้องมีข้อความอย่างน้อย 1 ตัวอักษร" }),
         phone_counts: z.number(),
+        is_scheduled: z.boolean(),
+        scheduled_date: z.date().optional(),
+        scheduled_time: z.string().optional(),
     });
     type FormValues = z.infer<typeof schema>;
     const form = useForm<FormValues>({
@@ -53,6 +66,9 @@ export default function SmsAddPage(request: any) {
             sender: servers[0]?.senders?.[0]?.id,
             receivers: '',
             phone_counts: countReceivers,
+            is_scheduled: true,
+            scheduled_date: new Date(),
+            scheduled_time: now.toTimeString().slice(0, 5),
         },
         mode: "onChange",
     });
@@ -81,6 +97,8 @@ export default function SmsAddPage(request: any) {
                         msg_length: data.msg.length,
                         cost: data.msg.length > 70 ? 2 : 1,
                         phone_counts: countReceivers,
+                        is_scheduled: data.is_scheduled,
+                        scheduled_at: toTimestamp(data.scheduled_date ?? '', data.scheduled_time),
                     })
                 });
 
@@ -126,6 +144,8 @@ export default function SmsAddPage(request: any) {
             });
         }
     }
+
+    const is_scheduled = form.watch('is_scheduled');
 
 
     return (
@@ -175,7 +195,7 @@ export default function SmsAddPage(request: any) {
                                         </FormControl>
                                         <FormDescription className="w-full flex gap-4 justify-between">
                                             <span>สามารเพิ่มเบอร์ได้มากกว่าา 1 เบอร์โดยใช้ <span className="bg-primary/50 text-primary-foreground rounded-full py-0 px-0.5">,</span> <span className="bg-primary/50 text-primary-foreground rounded-full py-0 px-0.5">;</span> หรือ <span className="bg-primary/50 text-primary-foreground rounded-full py-0 px-0.5">Enter</span> เพื่มเพิ่มเบอร์</span>
-                                            <span>{countReceivers}</span>
+                                            <span>{countReceivers} รายการ</span>
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -203,8 +223,86 @@ export default function SmsAddPage(request: any) {
                                     </FormItem>
                                 )}
                             />
+
+                            <Card className="flex flex-col gap-6 px-4">
+                                <FormField
+                                    control={form.control}
+                                    name="is_scheduled"
+                                    render={({ field, fieldState }) => (
+                                        <FormItem className="flex gap-2 items-center">
+                                            <FormControl>
+                                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                            <FormLabel>ตั่งเวลา</FormLabel>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex gap-3">
+
+                                    <FormField
+                                        control={form.control}
+                                        name="scheduled_date"
+                                        render={({ field, fieldState }) => (
+                                            <FormItem>
+                                                <FormLabel>วันที่</FormLabel>
+                                                <FormControl>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                disabled={!is_scheduled}
+                                                                variant="outline"
+                                                                id="date-picker"
+                                                                className="w-32 justify-between font-normal"
+                                                            >
+                                                                {field.value ? field.value.toLocaleDateString() : "Select date"}
+                                                                <ChevronDownIcon />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={field.value}
+                                                                captionLayout="dropdown"
+                                                                onSelect={field.onChange}
+                                                                fromYear={new Date().getFullYear()}
+                                                                toYear={addYears(new Date(), 10).getFullYear()}
+                                                                defaultMonth={field.value || new Date()}
+                                                                disabled={{ before: new Date() }}
+
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="scheduled_time"
+                                        render={({ field, fieldState }) => (
+                                            <FormItem>
+                                                <FormLabel>เวลา</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        disabled={!is_scheduled}
+                                                        type="time"
+                                                        id="time-picker"
+                                                        step="60"
+                                                        value={field.value}
+                                                        onChange={field.onChange}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </Card>
+
                             <div className="w-full flex justify-end">
-                                <Button>
+                                <Button type="submit">
                                     บันทึก
                                 </Button>
                             </div>
@@ -213,6 +311,8 @@ export default function SmsAddPage(request: any) {
                 </Form>
             </div>
 
+
+            {/* spam */}
             <AlertDialog open={hasBadWord} onOpenChange={setHasBadWord}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

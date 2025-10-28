@@ -29,21 +29,21 @@ class WebDashPageController extends Controller
     public function jobSMS(Request $request)
     {
         $user = $request->user();
-        $jobs = SendingJob::where('user_id', $user->id)->get();
+        $jobs = SendingJob::without(['user', 'server'])->where('user_id', $user->id)->orderBy('created_at', 'ASC')->limit(1000)->get();
 
         return Inertia::render('dashboards/jobs/sms/run', compact('jobs'));
     }
 
     public function sendingSMS(Request $request)
     {
-        $jobs = SendingJob::where('user_id', $request->user()->id)->get();
+        $jobs = SendingJob::without(['user', 'server'])->where('user_id', $request->user()->id)->orderBy('created_at', 'DESC')->limit(1000)->get();
 
         return Inertia::render('dashboards/sendings/sms/list', compact('jobs'));
     }
 
     public function reportSMS(Request $request)
     {
-        $reports = Report::where('user_id', $request->user()->id)->get();
+        $reports = Report::without(['user', 'server'])->where('user_id', $request->user()->id)->orderBy('created_at', 'DESC')->limit(1000)->get();
         return Inertia::render('dashboards/reports/sms/list', compact('reports'));
     }
 }

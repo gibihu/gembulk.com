@@ -11,7 +11,7 @@ import ReportTable from "../table";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'ทำงาน',
+        title: 'ส่งแล้ว',
         href: dash.report.sms().url,
     },
 ];
