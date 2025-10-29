@@ -25,6 +25,8 @@ class Report extends Model
         'sender_id',
         'server_id',
         'status',
+        'is_scheduled',
+        'scheduled_at',
     ];
     protected $hidden = [
         'server_id',
