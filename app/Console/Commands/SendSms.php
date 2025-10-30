@@ -160,10 +160,17 @@ class SendSms extends Command
             $setting = $server->settings;
             $cradits = $setting['cradits'];
             $callback = $cradits['callback']; // ['bananc', {cradit}]
-
+            
             $parsed = parse_url($server->url);
             $base_url = $parsed['scheme'].'://'.$parsed['host'];
-            $sync_url = str_replace('{base_url}', $base_url, $cradits['sync_url']);
+
+            // ตรวจสอบก่อนว่า sync_url มี {base_url} หรือไม่
+            if (strpos($cradits['sync_url'], '{base_url}') !== false) {
+                $sync_url = str_replace('{base_url}', $base_url, $cradits['sync_url']);
+            } else {
+                // ถ้าไม่มี {base_url} ให้ใช้ URL เต็มตามที่มีอยู่
+                $sync_url = $cradits['sync_url'];
+            }
             $method = $cradits['sync_method'];
 
             if ($method == 'POST') {
