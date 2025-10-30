@@ -55,7 +55,7 @@ export interface ServerType {
 }
 
 export interface ServerSettingType {
-    cradits: ServerSettingCreditType;
+    credits: ServerSettingCreditType;
 }
 export interface ServerSettingCreditType{
     amount: number | 0;
