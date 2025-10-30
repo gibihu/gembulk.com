@@ -84,7 +84,7 @@ export const columns: ColumnDef<ServerType>[] = [
         accessorKey: "credit",
         header: "Credit",
         cell: ({ row }) => {
-            const amount = row.original.settings.cradits.amount;
+            const amount = row.original.settings.credits.amount;
 
             return amount
         },

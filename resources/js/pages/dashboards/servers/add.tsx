@@ -28,7 +28,7 @@ export default function ServerListPage(request: any) {
     request.server as ServerType;
 
     const schema = z.object({
-        // cradits
+        // credits
         sync_url: z.string().min(1, { message: "ห้ามว่าง" }),
         sync_method: z.string().min(1, { message: "ห้ามว่าง" }),
         callback: z.array(z.string()).optional(),
@@ -38,12 +38,12 @@ export default function ServerListPage(request: any) {
         ? {
             sync_url: "",
             sync_method: "",
-            callback: ["param", "{cradit}"],
+            callback: ["param", "{credit}"],
         }
         : {
-            sync_url: request.server?.settings.cradits.sync_url,
-            sync_method: request.server?.settings.cradits.sync_method,
-            callback: request.server?.settings.cradits.callback,
+            sync_url: request.server?.settings.credits.sync_url,
+            sync_method: request.server?.settings.credits.sync_method,
+            callback: request.server?.settings.credits.callback,
         };
 
     const form = useForm<FormValues>({
@@ -68,7 +68,7 @@ export default function ServerListPage(request: any) {
                         <form onSubmit={form.handleSubmit(submit)}>
                             <div className="flex flex-col gap-4 w-full">
                                 <div className="flex justify-between w-full">
-                                    <Label className="text-lg">cradit settings</Label>
+                                    <Label className="text-lg">credit settings</Label>
                                     <GetCredit item={request.server ?? {}} />
                                 </div>
                                 <FormField
@@ -164,7 +164,7 @@ function SelectMethod({
 
 
 function GetCredit({item}:{item: ServerType}){
-    const [credit, setCreadit] = useState<number>(item.settings.cradits.amount ?? 0);
+    const [credit, setCreadit] = useState<number>(item.settings.credits.amount ?? 0);
 
     return(
         <div className="text-xl text-primary">
