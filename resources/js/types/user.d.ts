@@ -55,7 +55,12 @@ export interface ServerType {
 }
 
 export interface ServerSettingType {
-
+    cradits: ServerSettingCreditType;
+}
+export interface ServerSettingCreditType{
+    amount: number | 0;
+    sync_url: string;
+    callback: string[];
 }
 export interface ServerHeaderType {
 

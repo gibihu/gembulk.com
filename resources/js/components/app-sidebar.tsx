@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { AudioWaveform, BookOpen, Bot, Command, Folder, Frame, GalleryVerticalEnd, LayoutGrid, LifeBuoy, PieChart, Send, Settings2, SquareTerminal, Map, Notebook, Layers } from 'lucide-react';
+import { AudioWaveform, BookOpen, Bot, Command, Folder, Frame, GalleryVerticalEnd, LayoutGrid, LifeBuoy, PieChart, Send, Settings2, SquareTerminal, Map, Notebook, Layers, Server } from 'lucide-react';
 import AppLogo from './app-logo';
 import dash from '@/routes/dash';
 import { NavProjects } from './nav-project';
@@ -41,6 +41,18 @@ const footerNavItems: NavItem[] = [
 
 const data = {
     navMain: [
+        {
+            title: "Server",
+            url: dash.server.lists().url,
+            icon: Server,
+            isActive: false,
+            items: [
+                {
+                    title: "List",
+                    url: dash.server.lists().url,
+                },
+            ],
+        },
         {
             title: "Creating",
             url: dash.create.sms().url,

@@ -8,6 +8,7 @@ use App\Http\Controllers\Sendings\SMSSendingController;
 use App\Models\Sendings\Report;
 use App\Models\Sendings\SendingJob;
 use App\Models\Sendings\SpamWord;
+use App\Models\Sendings\Server;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Inertia\Inertia;
@@ -45,5 +46,23 @@ class WebDashPageController extends Controller
     {
         $reports = Report::without(['user', 'server'])->where('user_id', $request->user()->id)->orderBy('created_at', 'DESC')->limit(1000)->get();
         return Inertia::render('dashboards/reports/sms/list', compact('reports'));
+    }
+
+    public function serverAdd(Request $request)
+    {
+        return Inertia::render('dashboards/servers/add');
+    }
+    public function serverLists(Request $request)
+    {
+        $user = $request->user();
+        $servers = Server::with('user')->where('user_id', $user->id)->get();
+
+        return Inertia::render('dashboards/servers/lists', compact('servers'));
+    }
+    public function serverItem(Request $request, $id)
+    {
+        $server = Server::find($id);
+
+        return Inertia::render('dashboards/servers/add', compact('server'));
     }
 }

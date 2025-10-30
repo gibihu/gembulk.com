@@ -33,7 +33,14 @@ class SendingTableSeeder extends Seeder
             'host' => 'api.me-sms.com',
             'url' => 'https://api.me-sms.com/v1/sms',
             'method' => 'POST',
-            'settings' => [],
+            'settings' => [
+                'cradits' => [
+                    'amount' => 0,
+                    'sync_method' => 'GET',
+                    'sync_url' => '{base_url}/v1/users/balance',
+                    'callback' => ['bananc', '{cradit}']
+                ]
+            ],
             'headers' => Crypt::encryptString(json_encode(
                 [
                     'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTU0LCJlbWFpbCI6ImdlbWZhdGVmdWd1aUBnbWFpbC5jb20iLCJuYW1lIjoiZ2VtYnVsayIsInBob25lIjoiMDk1NjM0Njc1NiIsInN0YXR1cyI6ImFjdGl2ZSIsImNyZWF0ZWRBdCI6IjIwMjUtMDktMDVUMTc6NTg6NTIuNjAwWiIsInVwZGF0ZWRBdCI6IjIwMjUtMDktMDVUMTc6NTg6NTIuNjAwWiIsImxvbmdMaXZlVG9rZW4iOnRydWUsImlhdCI6MTc1ODQ2NTUxOSwiZXhwIjoxNzkwMDIzMTE5fQ.sJQDjwKOYALP_cB_szSnW4g7cY3CmsbOfiGRaeSXZvU',
@@ -100,6 +107,7 @@ class SendingTableSeeder extends Seeder
         );
 
         $server->user_id = $user->id;
+        $server->save();
 
 
         $words = [
