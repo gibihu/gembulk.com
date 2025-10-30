@@ -9,6 +9,8 @@ use App\Models\Sendings\SendingJob;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SendSms extends Command
 {
@@ -31,6 +33,9 @@ class SendSms extends Command
      */
     public function handle()
     {
+        Log::info('');
+        Log::info('=== Start Sending Job ===');
+
         $jobs = SendingJob::limit(500)->orderBy('scheduled_at', 'ASC')->orderBy('created_at', 'ASC')->get();
 
         foreach ($jobs as $job) {
@@ -81,17 +86,17 @@ class SendSms extends Command
 
                     if (array_key_exists($key, $response)) {
                         $value = $response[$key];
-                        if($mapping == '{success}'){
+                        if ($mapping == '{success}') {
                             $processed['success'] = $value;
-                        }else if($mapping == '{msg}'){
+                        } elseif ($mapping == '{msg}') {
                             $processed['message'] = $value;
-                        }else if($mapping == '{data}'){
+                        } elseif ($mapping == '{data}') {
                             $processed['data'] = $value;
-                        }else if($mapping == '{status}'){
+                        } elseif ($mapping == '{status}') {
                             $processed['status'] = $value;
-                        }else if($mapping == '{code}'){
+                        } elseif ($mapping == '{code}') {
                             $processed['code'] = $value;
-                        }else{
+                        } else {
                             $processed[$key] = $value;
                         }
                     }
@@ -117,6 +122,9 @@ class SendSms extends Command
                     'scheduled_at' => $job->scheduled_at ? Carbon::parse($job->scheduled_at) : Carbon::now(),
                 ]);
 
+                Log::info("Send to $job->receiver Successfuly.");
+                $this->GetNSetCredit($header, $server);
+
             } catch (Exception $e) {
                 $user = $job->user;
                 $report = Report::create([
@@ -140,6 +148,72 @@ class SendSms extends Command
 
             $job->delete();
         }
-        $this->info('SMS jobs processed successfully.');
+        Log::info('=== End Sending Job ===');
+        Log::info('');
+    }
+
+    private function GetNSetCredit($header, $server)
+    {
+        try {
+            Log::info('');
+            Log::info('=== Start Update Cradit Job ===');
+            $setting = $server->settings;
+            $cradits = $setting['cradits'];
+            $callback = $cradits['callback']; // ['bananc', {cradit}]
+            
+            $parsed = parse_url($server->url);
+            $base_url = $parsed['scheme'].'://'.$parsed['host'];
+
+            // ตรวจสอบก่อนว่า sync_url มี {base_url} หรือไม่
+            if (strpos($cradits['sync_url'], '{base_url}') !== false) {
+                $sync_url = str_replace('{base_url}', $base_url, $cradits['sync_url']);
+            } else {
+                // ถ้าไม่มี {base_url} ให้ใช้ URL เต็มตามที่มีอยู่
+                $sync_url = $cradits['sync_url'];
+            }
+            $method = $cradits['sync_method'];
+
+            if ($method == 'POST') {
+                Log::info('Sending POST --> '.$sync_url);
+                $response = Http::withHeaders($header)->post($item->url, $item->body);
+            } else {
+                Log::info('Sending GET --> '.$sync_url);
+                $response = Http::withHeaders($header)->get($sync_url);
+            }
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                // ตรวจสอบ callback[0] ว่ามี key ใน $data หรือไม่
+                $amount = null;
+                if (isset($callback[0]) && array_key_exists($callback[0], $data)) {
+                    $amountValue = $data[$callback[0]];
+
+                    // อัปเดต $server->settings['cradits']['amount'] ด้วย value ที่ได้
+                    $settings = $server->settings;          // copy ค่าออกมา
+                    $settings['cradits']['amount'] = $amountValue;  // แก้ไข
+                    $server->settings = $settings;          // เซ็ตกลับ
+                    $server->save();                        // บันทึกใน DB
+                    Log::info('--- Success To Update Cradit ---');
+                    Log::info('');
+
+                    return true;
+                } else {
+                    Log::info(['data' => $data, 'check_1' => isset($callback[0]), 'check_2' => array_key_exists($callback[0], $data)]);
+                    Log::info('');
+                }
+            }
+
+            Log::info(['response' => $response->json(), 'status' => $response->status()]);
+            Log::info('--- Fail To Update Cradit ---');
+            Log::info('');
+
+            return false;
+        } catch (Exception $e) {
+            Log::info('Exception: '.['e' => $e->getMessage()]);
+            Log::info('');
+        }
+        Log::info('=== End Update Cradit Job ===');
+        Log::info('');
     }
 }

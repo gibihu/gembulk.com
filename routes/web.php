@@ -18,21 +18,26 @@ Route::middleware(['auth'])->group(function () {
 
     Route::controller(WebDashPageController::class)->prefix('dashboard')->name('dash.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::prefix('server')->name('server.')->group(function () {
+            Route::get('add', 'serverAdd')->name('add');
+            Route::get('lists', 'serverLists')->name('lists');
+            Route::get('{id}', 'serverItem')->name('item');
+        });
         Route::prefix('create')->name('create.')->group(function () {
-            Route::get('/sms', 'createSMS')->name('sms');
-            Route::get('/otp', 'createOTP')->name('otp');
+            Route::get('sms', 'createSMS')->name('sms');
+            Route::get('otp', 'createOTP')->name('otp');
         });
         Route::prefix('sending')->name('sending.')->group(function () {
-            Route::get('/sms', 'sendingSMS')->name('sms');
-            Route::get('/otp', 'sendingOTP')->name('otp');
+            Route::get('sms', 'sendingSMS')->name('sms');
+            Route::get('otp', 'sendingOTP')->name('otp');
         });
         Route::prefix('jobs')->name('jobs.')->group(function () {
-            Route::get('/sms', 'jobSMS')->name('sms');
-            Route::get('/otp', 'jobOTP')->name('otp');
+            Route::get('sms', 'jobSMS')->name('sms');
+            Route::get('otp', 'jobOTP')->name('otp');
         });
         Route::prefix('reports')->name('report.')->group(function () {
-            Route::get('/sms', 'reportSMS')->name('sms');
-            Route::get('/otp', 'reportOTP')->name('otp');
+            Route::get('sms', 'reportSMS')->name('sms');
+            Route::get('otp', 'reportOTP')->name('otp');
         });
     });
 });
