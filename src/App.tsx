@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import {
   MessageSquare,
   ShieldCheck,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './components/ui/accordion';
 import { Button } from './components/ui/button';
+import { useEffect, useState } from "react";
 
 const LandingPage = () => {
   const PORTAL_URL = "https://portal.gembulk.com";
